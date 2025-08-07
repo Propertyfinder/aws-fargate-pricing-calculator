@@ -39,21 +39,28 @@
             </v-flex>
           </v-layout>
           <v-layout wrap>
-            <v-flex xs12 sm3 class="px-1">
+           <v-flex xs12 sm2 class="px-1">
+              <v-text-field
+                v-model="tasks"
+                type="number"
+                label="Tasks"
+              ></v-text-field>
+            </v-flex>
+            <v-flex xs12 sm2 class="px-1">
               <v-select
                 v-model="timeType"
-                :items="['Hours', 'Minutes']"
+                :items="['Days', 'Hours', 'Minutes']"
                 label="Time"
               ></v-select>
             </v-flex>
-            <v-flex xs12 sm3 class="px-1">
+            <v-flex xs12 sm2 class="px-1">
               <v-text-field
                 v-model="duration"
                 label="Duration"
                 type="number"
               ></v-text-field>
             </v-flex>
-            <v-flex xs12 sm3 class="px-1">
+            <v-flex xs12 sm2 class="px-1">
               <v-select
                 v-model="cpu"
                 :items="cpusForRender"
@@ -63,7 +70,7 @@
                 item-value="value"
               ></v-select>
             </v-flex>
-            <v-flex xs12 sm3 class="px-1">
+            <v-flex xs12 sm2 class="px-1">
               <v-select
                 v-model="ram"
                 :items="ramsForRender"
@@ -140,6 +147,7 @@
   <script>
     const TYPE_MINUTES = 'Minutes';
     const TYPE_HOURS = 'Hours';
+    const TYPE_DAYS = 'Days';
     if (VueCurrencyFilter) {
       Vue.use(VueCurrencyFilter, {
         symbol : '$',
@@ -158,8 +166,9 @@
         cpu: 0.25,
         ram: 1,
         region: 'us-east-1',
-        timeType: 'Hours',
-        duration: 1,
+        timeType: 'Days',
+        tasks: 1,
+        duration: 30,
         graphContainer: null,
         graph: null,
         graphConfig: {
@@ -309,17 +318,24 @@
             duration *= 60;
           }
 
+          if(this.timeType === TYPE_DAYS) {
+            duration *= 24*60;
+          }
+
           return Math.ceil(duration);
         },
         unitPrice() {
           return this.pricePerHour[this.region];
         },
         cpuPrice() {
-          return this.durationInMinute*this.cpu*this.unitPrice.cpu/60
+          return this.durationInMinute*this.cpu*this.unitPrice.cpu/60*this.numberOfTasks;
         },
         ramPrice() {
-          return this.durationInMinute*this.ram*this.unitPrice.ram/60
+          return this.durationInMinute*this.ram*this.unitPrice.ram/60*this.numberOfTasks;
         },
+        numberOfTasks(){
+          return parseInt(this.tasks, 10);
+        }
       },
       created() {
         this.graphHelper.pie = d3.pie()
